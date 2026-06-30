@@ -1,35 +1,38 @@
 const express = require('express')
-const { toDos } = require("./data/memory")
+const { connectDB } = require("./data/database")
 const { authMiddleware } = require('./middlewares/auth')
 
 const router = express.Router()
 router.use(authMiddleware)
 
-router.get('/tarefas', (req, res) => {
+router.get('/tarefas', async (req, res) => {
+    const db = await connectDB();
+
+    const toDos = await db.all("SELECT * FROM todos")
+
     return res.status(200).json({mensagem: "Lista de tarefas", tarefas: toDos})
 })
 
-router.delete('/tarefas/:id', (req, res) => {
+router.delete('/tarefas/:id', async (req, res) => {
+    const db = await connectDB();
+
     const  id = req.params.id
-    const tarefa = toDos.find(t => t.id === Number(id))
-    if(!tarefa) {
-        return res.status(400).json({mensagem: "ID não encontrado"})
+    const tarefa = await db.get("SELECT * FROM todos WHERE id = ?", [id])
+    if (!tarefa) {
+        return res.status(404).json({ mensagem: "ID não encontrado" })
     }
-    const tarefaDeletada = toDos.filter(t => t.id !== Number(id))
-    toDos.splice(0, toDos.length, ...tarefaDeletada)
-    
+    await db.run("DELETE FROM todos WHERE id = ?", [id])
     res.status(200).json({ mensagem: "Tarefa deletada!", tarefa: tarefa})
 })
 
-router.put('/tarefas/:id', (req, res) => {
+router.put('/tarefas/:id', async (req, res) => {
+    const db = await connectDB()
     const  id = req.params.id
-    const tarefa = toDos.find(t => t.id === Number(id))
-    if(!tarefa) {
-        return res.status(400).json({mensagem: "ID não encontrado"})
+    const tarefa = await db.get("SELECT * FROM todos WHERE id = ?", [id])
+    if (!tarefa) {
+        return res.status(404).json({ mensagem: "ID não encontrado" })
     }
-    
-    tarefa.titulo = req.body.titulo
-    tarefa.feito = req.body.feito
+    await db.run("PUT FROM todos WHERE id = ?", )
     res.status(200).json({mensagem: "Tarefa atualizada!", tarefas: tarefa})
 })
 
