@@ -32,24 +32,21 @@ router.put('/tarefas/:id', async (req, res) => {
     if (!tarefa) {
         return res.status(404).json({ mensagem: "ID não encontrado" })
     }
-    await db.run("PUT FROM todos WHERE id = ?", )
+    const { titulo, descricao, feito } = req.body
+    await db.run("UPDATE todos SET titulo = ?, descricao = ?, feito = ? WHERE id = ?", [titulo, descricao, feito, id])
+
     res.status(200).json({mensagem: "Tarefa atualizada!", tarefas: tarefa})
 })
 
-router.post('/tarefas', (req, res) => {
-    const { titulo, descricao } = req.body;
+router.post('/tarefas', async (req, res) => {
+    const db = await connectDB()
+    const { titulo, descricao, feito } = req.body;
 
     if(!titulo) {
         return res.status(400).json({mensagem: "Título é obrigatório"})
     }
 
-    const novaTarefa = {
-        id: toDos.length + 1,
-        titulo,
-        descricao,
-        feito: false
-    }
-    toDos.push(novaTarefa)
+    const novaTarefa = await db.run("INSERT INTO todos (titulo, descricao, feito) VALUES (?, ?,)", [titulo, descricao, feito])
 
     return res.status(201).json({
          mensagem: "Tarefa criada com sucesso",
